@@ -26,7 +26,6 @@ const User = sequelize.define("User", {
 		type: Sequelize.INTEGER,
 		allowNull: false,
 	},
-	role: Sequelize.INTEGER,
 	deviceToken: {
 		type: Sequelize.STRING,
 		allowNull: false,

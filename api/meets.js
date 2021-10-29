@@ -35,7 +35,7 @@ router.get("/people", isAuth, async (req, res) => {
 				name: usr.name + " - " + usr.company,
 			};
 		});
-
+		console.log(result);
 		return res.json({
 			status: 200,
 			msg: "Today meet list",
@@ -259,12 +259,11 @@ router.get("/accepted", isAuth, async (req, res) => {
 // @route    POST api/meets/declined
 // @desc     Get all pending meets
 // @access   Private
-router.get("/declined", async (req, res) => {
-	console.log(4242);
+router.get("/declined", isAuth, async (req, res) => {
 	try {
 		const meets = await CancelledMeets.findAll({
 			where: {
-				// userId: req.user.id,
+				userId: req.user.id,
 				// mine: 0,
 				status: 1,
 			},
@@ -327,14 +326,14 @@ router.get("/calendar", isAuth, async (req, res) => {
 			return {
 				id: meet.meetId,
 				createdAt: meet.createdAt.toISOString().slice(0, 10),
-				startDate: meet.createdAt,
+				startDate: meet.Meet.startDate,
 				status: meet.status,
 				meets: [
 					{
 						title: meet.Meet.title,
 						description: meet.Meet.description,
 						time: meet.Meet.time,
-						startDate: meet.Meet.createdAt.toISOString().slice(0, 10),
+						startDate: meet.Meet.startDate.toISOString().slice(0, 10),
 					},
 				],
 				partner: [
@@ -346,6 +345,7 @@ router.get("/calendar", isAuth, async (req, res) => {
 				],
 			};
 		});
+		console.log(resultFormat);
 
 		const result = resultFormat.reduce(function (r, a) {
 			r[a.startDate.toISOString().slice(0, 10)] =
@@ -373,17 +373,16 @@ router.get("/calendar", isAuth, async (req, res) => {
 // @desc     Get all meets
 // @access   Private
 router.post("/create", isAuth, async (req, res) => {
-	console.log(231);
 	try {
-		const { title, description, selectedDate, time, invitedUserId } = req.body;
-
+		const { title, user, description, date, time } = req.body;
+		console.log(user);
 		const meet = await Meets.create({
 			title,
 			description,
-			// startDate: new Date(selectedDate),
 			userId: req.user.id,
 			statusId: 3,
 			time,
+			startDate: date,
 		});
 
 		await CancelledMeets.create({
@@ -392,16 +391,14 @@ router.post("/create", isAuth, async (req, res) => {
 			meetId: meet.id,
 			mine: 1,
 			accepted: 0,
-			createdAt: selectedDate,
 		});
 
 		await CancelledMeets.create({
 			status: 0,
-			userId: invitedUserId,
+			userId: user.id,
 			meetId: meet.id,
 			mine: 0,
 			accepted: 0,
-			createdAt: selectedDate,
 		});
 
 		return res.json({

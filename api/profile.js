@@ -21,169 +21,203 @@ const isAuth = require("../middleware/auth");
 // @desc     Authenticate admin & get token
 // @access   Public
 router.post(
-	"/edit-name",
-	isAuth,
-	[check("name", "Password is required").isLength({ min: 0, max: 30 })],
-	async (req, res) => {
-		const errors = validationResult(req);
-		if (!errors.isEmpty()) {
-			return res.json({
-				status: 400,
-				msg: "Invalid credentials",
-				result: [],
-			});
-		}
+  "/edit-name",
+  isAuth,
+  [check("name", "Password is required").isLength({ min: 0, max: 30 })],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.json({
+        status: 400,
+        msg: "Invalid credentials",
+        result: [],
+      });
+    }
 
-		const { name } = req.body;
+    const { name } = req.body;
 
-		try {
-			await User.update(
-				{
-					name,
-				},
-				{ where: { id: req.user.id } }
-			);
-			return res.json({
-				status: 200,
-				msg: "Success",
-				result: [],
-			});
-		} catch (err) {
-			console.log(err);
-			return res.json({
-				status: 500,
-				msg: "Server error",
-				result: [],
-			});
-		}
-	}
+    try {
+      await User.update(
+        {
+          name,
+        },
+        { where: { id: req.user.id } }
+      );
+      return res.json({
+        status: 200,
+        msg: "Success",
+        result: [],
+      });
+    } catch (err) {
+      console.log(err);
+      return res.json({
+        status: 500,
+        msg: "Server error",
+        result: [],
+      });
+    }
+  }
 );
 
 // @route    POST api/auth/register
 // @desc     Register user
 // @access   Public
 router.post(
-	"/edit-company",
-	isAuth,
-	[check("name", "Password is required").isLength({ min: 0, max: 30 })],
-	async (req, res) => {
-		const errors = validationResult(req);
-		if (!errors.isEmpty()) {
-			return res.json({
-				status: 400,
-				msg: "Invalid credentials",
-				result: [],
-			});
-		}
+  "/edit-company",
+  isAuth,
+  [check("name", "Password is required").isLength({ min: 0, max: 30 })],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.json({
+        status: 400,
+        msg: "Invalid credentials",
+        result: [],
+      });
+    }
 
-		const { company } = req.body;
+    const { company } = req.body;
 
-		try {
-			await User.update(
-				{
-					company,
-				},
-				{ where: { id: req.user.id } }
-			);
-			return res.json({
-				status: 200,
-				msg: "Success",
-				result: [],
-			});
-		} catch (err) {
-			console.log(err);
-			return res.json({
-				status: 500,
-				msg: "Server error",
-				result: [],
-			});
-		}
-	}
+    try {
+      await User.update(
+        {
+          company,
+        },
+        { where: { id: req.user.id } }
+      );
+      return res.json({
+        status: 200,
+        msg: "Success",
+        result: [],
+      });
+    } catch (err) {
+      console.log(err);
+      return res.json({
+        status: 500,
+        msg: "Server error",
+        result: [],
+      });
+    }
+  }
 );
 
 router.get("/", isAuth, async (req, res) => {
-	try {
-		const data = await User.findByPk(req.user.id);
+  try {
+    const data = await User.findByPk(req.user.id);
 
-		let result = {
-			id: data.id,
-			name: data.name,
-			company: data.company,
-		};
+    let result = {
+      id: data.id,
+      name: data.name,
+      company: data.company,
+    };
 
-		return res.json({
-			status: 200,
-			msg: "Success",
-			result: result,
-		});
-	} catch (err) {
-		console.log(err);
-		return res.json({
-			status: 500,
-			msg: "Server error",
-			result: [],
-		});
-	}
+    return res.json({
+      status: 200,
+      msg: "Success",
+      result: result,
+    });
+  } catch (err) {
+    console.log(err);
+    return res.json({
+      status: 500,
+      msg: "Server error",
+      result: [],
+    });
+  }
 });
 
 // @route    POST api/auth/login
 // @desc     Authenticate admin & get token
 // @access   Public
 router.post(
-	"/invitation",
-	isAuth,
-	[check("email", "Password is required").isEmail()],
-	async (req, res) => {
-		const errors = validationResult(req);
-		if (!errors.isEmpty()) {
-			return res.json({
-				status: 400,
-				msg: "Invalid credentials",
-				result: [],
-			});
-		}
+  "/invitation",
+  isAuth,
+  [check("email", "Password is required").isEmail()],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.json({
+        status: 400,
+        msg: "Invalid credentials",
+        result: [],
+      });
+    }
 
-		const { email } = req.body;
+    const { email } = req.body;
 
-		try {
-			const partner = await User.findOne({
-				where: {
-					email,
-				},
-			});
+    try {
+      const partner = await User.findOne({
+        where: {
+          email,
+        },
+      });
 
-			if (!partner || partner.id === req.user.id) {
-				return res.json({
-					status: 404,
-					msg: "Partner not found",
-					result: [],
-				});
-			}
-			const invitation = await Invitation.create({
-				userId: req.user.id,
-				generatedCode: 12,
-				status: 0,
-			});
+      if (!partner || partner.id === req.user.id) {
+        return res.json({
+          status: 404,
+          msg: "Partner not found",
+          result: [],
+        });
+      }
+      const invitation = await Invitation.create({
+        userId: req.user.id,
+        generatedCode: 12,
+        status: 0,
+      });
 
-			await Partners.create({
-				userId: partner.id,
-				invitationId: invitation.id,
-			});
+      await Partners.create({
+        userId: partner.id,
+        invitationId: invitation.id,
+      });
 
-			return res.json({
-				status: 200,
-				msg: "Success",
-				result: [],
-			});
-		} catch (err) {
-			console.log(err);
-			return res.json({
-				status: 500,
-				msg: "Server error",
-				result: [],
-			});
-		}
-	}
+      return res.json({
+        status: 200,
+        msg: "Success",
+        result: [],
+      });
+    } catch (err) {
+      console.log(err);
+      return res.json({
+        status: 500,
+        msg: "Server error",
+        result: [],
+      });
+    }
+  }
 );
+
+// @route    POST api/auth/login
+// @desc     Authenticate admin & get token
+// @access   Public
+router.post("/delete-account", isAuth, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.json({
+        status: 400,
+        msg: "Account already deleted",
+        result: [],
+      });
+    }
+    await User.destroy({
+      where: {
+        id: req.user.id,
+      },
+    });
+
+    return res.json({
+      status: 200,
+      msg: "Account deleted",
+      result: [],
+    });
+  } catch (err) {
+    console.log(err);
+    return res.json({
+      status: 500,
+      msg: "Server error",
+      result: [],
+    });
+  }
+});
 
 module.exports = router;

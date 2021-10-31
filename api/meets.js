@@ -162,7 +162,7 @@ router.get("/pending", isAuth, async (req, res) => {
         mine: 0,
         status: 0,
       },
-      order: [["startDate", "DESC"]],
+      order: [["startDate", "ASC"]],
 
       include: [{ model: Meets, include: [{ model: User }] }],
     });
@@ -216,7 +216,7 @@ router.get("/accepted", isAuth, async (req, res) => {
         accepted: 1,
         status: 3,
       },
-      order: [["startDate", "DESC"]],
+      order: [["startDate", "ASC"]],
       include: [
         {
           model: Meets,
@@ -273,7 +273,7 @@ router.get("/declined", isAuth, async (req, res) => {
         // mine: 0,
         status: 1,
       },
-
+      order: [["startDate", "ASC"]],
       include: [{ model: Meets, include: [{ model: User }] }],
     });
 

@@ -455,8 +455,6 @@ router.get("/sent", isAuth, async (req, res) => {
       where: {
         userId: req.user.id,
         mine: 1,
-        status: 0,
-        accepted: 0,
       },
 
       include: [{ model: Meets, include: [{ model: User }] }],

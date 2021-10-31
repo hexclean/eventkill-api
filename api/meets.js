@@ -162,6 +162,7 @@ router.get("/pending", isAuth, async (req, res) => {
         mine: 0,
         status: 0,
       },
+      order: [["startDate", "DESC"]],
 
       include: [{ model: Meets, include: [{ model: User }] }],
     });
@@ -215,8 +216,13 @@ router.get("/accepted", isAuth, async (req, res) => {
         accepted: 1,
         status: 3,
       },
-
-      include: [{ model: Meets, include: [{ model: User }] }],
+      order: [["startDate", "DESC"]],
+      include: [
+        {
+          model: Meets,
+          include: [{ model: User }],
+        },
+      ],
     });
 
     const result = meets.map((meet) => {
@@ -391,6 +397,7 @@ router.post("/create", isAuth, async (req, res) => {
       meetId: meet.id,
       mine: 1,
       accepted: 0,
+      startDate: date,
     });
 
     await CancelledMeets.create({
@@ -399,6 +406,7 @@ router.post("/create", isAuth, async (req, res) => {
       meetId: meet.id,
       mine: 0,
       accepted: 0,
+      startDate: date,
     });
 
     return res.json({
@@ -456,6 +464,7 @@ router.get("/sent", isAuth, async (req, res) => {
         userId: req.user.id,
         mine: 1,
       },
+      order: [["createdAt", "DESC"]],
 
       include: [{ model: Meets, include: [{ model: User }] }],
     });

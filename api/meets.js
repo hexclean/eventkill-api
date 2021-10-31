@@ -374,14 +374,14 @@ router.get("/calendar", isAuth, async (req, res) => {
 // @access   Private
 router.post("/create", isAuth, async (req, res) => {
   try {
-    const { title, user, description, date, time } = req.body;
+    const { title, user, description, date, startTime, endTime } = req.body;
     console.log(user);
     const meet = await Meets.create({
       title,
       description,
       userId: req.user.id,
       statusId: 3,
-      time,
+      time: startTime + " - " + endTime,
       startDate: date,
     });
 
@@ -395,7 +395,7 @@ router.post("/create", isAuth, async (req, res) => {
 
     await CancelledMeets.create({
       status: 0,
-      userId: user.id,
+      userId: user,
       meetId: meet.id,
       mine: 0,
       accepted: 0,

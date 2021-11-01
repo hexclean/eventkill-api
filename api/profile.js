@@ -109,6 +109,7 @@ router.get("/", isAuth, async (req, res) => {
       id: data.id,
       name: data.name,
       company: data.company,
+      username: data.username,
     };
 
     return res.json({

@@ -102,7 +102,7 @@ router.get("/today", isAuth, async (req, res) => {
   try {
     const meets = await CancelledMeets.findAll({
       where: {
-        id: {
+        userId: {
           [Op.like]: `%${req.user.id}%`,
         },
         status: 3,

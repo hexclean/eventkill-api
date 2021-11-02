@@ -102,17 +102,14 @@ router.get("/today", isAuth, async (req, res) => {
   try {
     const meets = await CancelledMeets.findAll({
       where: {
-        userId: {
-          [Op.like]: `%${req.user.id}%`,
-        },
+        userId: { [Op.not]: [req.user.id] },
         status: 3,
-        createdAt: {
+        startDate: {
           [Op.gt]: TODAY_START,
           [Op.lt]: NOW,
         },
       },
-
-      include: [{ model: Meets, include: [{ model: User }] }],
+      include: [{ model: Meets }, { model: User }],
     });
 
     const result = meets.map((meet) => {
@@ -130,9 +127,9 @@ router.get("/today", isAuth, async (req, res) => {
         ],
         partner: [
           {
-            name: meet.Meet.User.name,
-            email: meet.Meet.User.email,
-            company: meet.Meet.User.company,
+            name: meet.User.name,
+            email: meet.User.email,
+            company: meet.User.company,
           },
         ],
       };

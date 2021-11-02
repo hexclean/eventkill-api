@@ -157,13 +157,12 @@ router.get("/pending", isAuth, async (req, res) => {
   try {
     const meets = await CancelledMeets.findAll({
       where: {
-        userId: req.user.id,
-        mine: 0,
+        userId: { [Op.not]: [req.user.id] },
         status: 0,
       },
       order: [["startDate", "ASC"]],
 
-      include: [{ model: Meets, include: [{ model: User }] }],
+      include: [{ model: Meets }, { model: User }],
     });
 
     const result = meets.map((meet) => {
@@ -180,9 +179,9 @@ router.get("/pending", isAuth, async (req, res) => {
         ],
         partner: [
           {
-            name: meet.Meet.User.name,
-            email: meet.Meet.User.email,
-            company: meet.Meet.User.company,
+            name: meet.User.name,
+            email: meet.User.email,
+            company: meet.User.company,
           },
         ],
       };
@@ -210,18 +209,13 @@ router.get("/accepted", isAuth, async (req, res) => {
   try {
     const meets = await CancelledMeets.findAll({
       where: {
-        userId: req.user.id,
+        userId: { [Op.not]: [req.user.id] },
         // mine: 0,
         accepted: 1,
         status: 3,
       },
       order: [["startDate", "ASC"]],
-      include: [
-        {
-          model: Meets,
-          include: [{ model: User }],
-        },
-      ],
+      include: [{ model: Meets }, { model: User }],
     });
 
     const result = meets.map((meet) => {
@@ -238,9 +232,9 @@ router.get("/accepted", isAuth, async (req, res) => {
         ],
         partner: [
           {
-            name: meet.Meet.User.name,
-            email: meet.Meet.User.email,
-            company: meet.Meet.User.company,
+            name: meet.User.name,
+            email: meet.User.email,
+            company: meet.User.company,
           },
         ],
       };
@@ -273,7 +267,7 @@ router.get("/declined", isAuth, async (req, res) => {
         status: 1,
       },
       order: [["startDate", "ASC"]],
-      include: [{ model: Meets, include: [{ model: User }] }],
+      include: [{ model: Meets }, { model: User }],
     });
 
     const result = meets.map((meet) => {
@@ -291,9 +285,9 @@ router.get("/declined", isAuth, async (req, res) => {
         ],
         partner: [
           {
-            name: meet.Meet.User.name,
-            email: meet.Meet.User.email,
-            company: meet.Meet.User.company,
+            name: meet.User.name,
+            email: meet.User.email,
+            company: meet.User.company,
           },
         ],
       };
@@ -324,7 +318,7 @@ router.get("/calendar", isAuth, async (req, res) => {
         userId: req.user.id,
       },
 
-      include: [{ model: Meets, include: [{ model: User }] }],
+      include: [{ model: Meets }, { model: User }],
     });
 
     const resultFormat = meets.map((meet) => {
@@ -343,14 +337,13 @@ router.get("/calendar", isAuth, async (req, res) => {
         ],
         partner: [
           {
-            name: meet.Meet.User.name,
-            email: meet.Meet.User.email,
-            company: meet.Meet.User.company,
+            name: meet.User.name,
+            email: meet.User.email,
+            company: meet.User.company,
           },
         ],
       };
     });
-    console.log(resultFormat);
 
     const result = resultFormat.reduce(function (r, a) {
       r[a.startDate.toISOString().slice(0, 10)] =
@@ -465,7 +458,7 @@ router.get("/sent", isAuth, async (req, res) => {
       },
       order: [["createdAt", "DESC"]],
 
-      include: [{ model: Meets, include: [{ model: User }] }],
+      include: [{ model: Meets }, { model: User }],
     });
 
     const result = meets.map((meet) => {
@@ -482,9 +475,9 @@ router.get("/sent", isAuth, async (req, res) => {
         ],
         partner: [
           {
-            name: meet.Meet.User.name,
-            email: meet.Meet.User.email,
-            company: meet.Meet.User.company,
+            name: meet.User.name,
+            email: meet.User.email,
+            company: meet.User.company,
           },
         ],
       };

@@ -19,10 +19,10 @@ app.use("/api/operation", require("./api/operation"));
 app.use("/api/profile", require("./api/profile"));
 
 sequelize
-	.sync()
-	.then(result => {
-		app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
-	})
-	.catch(err => {
-		console.log(err);
-	});
+  .sync()
+  .then((result) => {
+    app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+  })
+  .catch((err) => {
+    console.log(err);
+  });

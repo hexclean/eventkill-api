@@ -9,7 +9,7 @@ const User = require("../models/User");
 const Meets = require("../models/Meets");
 const Status = require("../models/Status");
 const StatusTranslations = require("../models/StatusTranslations");
-const CancelledMeets = require("../models/CancelledMeets");
+// const CancelledMeets = require("../models/");
 
 //! const mailgun = require("mailgun-js");
 //! const DOMAIN = "mg.foodnet.ro";
@@ -21,30 +21,30 @@ const CancelledMeets = require("../models/CancelledMeets");
 //! });
 
 router.post("/new-meet", isAuth, async (req, res) => {
-	try {
-		const users = await User.findByPk(req.user.id);
+  try {
+    const users = await User.findByPk(req.user.id);
 
-		const result = users.map(usr => {
-			return {
-				id: usr.id,
-				name: usr.name + " - " + usr.company,
-			};
-		});
+    const result = users.map((usr) => {
+      return {
+        id: usr.id,
+        name: usr.name + " - " + usr.company,
+      };
+    });
 
-		console.log(result.length);
-		return res.json({
-			status: 200,
-			msg: "Today meet list",
-			result: result,
-		});
-	} catch (error) {
-		console.log(error);
-		return res.json({
-			status: 500,
-			msg: "Server error",
-			result: [],
-		});
-	}
+    console.log(result.length);
+    return res.json({
+      status: 200,
+      msg: "Today meet list",
+      result: result,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      status: 500,
+      msg: "Server error",
+      result: [],
+    });
+  }
 });
 
 module.exports = router;

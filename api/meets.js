@@ -220,7 +220,7 @@ router.get("/pending", isAuth, async (req, res) => {
 
     const result = meets.map((meet) => {
       return {
-        id: meet.Meet.meetId,
+        id: meet.Meet.id,
         startDate: meet.Meet.startDate.toISOString().split("T")[0],
         status: meet.Meet.statusId,
         meets: [

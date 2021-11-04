@@ -99,42 +99,95 @@ router.get("/today", isAuth, async (req, res) => {
   const TODAY_START = new Date().setHours(0, 0, 0, 0);
   const NOW = new Date();
 
-  try {
-    const meets = await Partner.findAll({
-      where: {
-        userId: req.user.id,
-        statusId: 1,
-        startDate: {
-          [Op.gt]: TODAY_START,
-          [Op.lt]: NOW,
-        },
-      },
-      order: [["startDate", "ASC"]],
-      include: [{ model: Meets, include: [{ model: User }] }],
-    });
+  const partnerDecline = await Partner.findOne({
+    where: {
+      userId: req.user.id,
+    },
+  });
 
-    const result = meets.map((meet) => {
-      return {
-        id: meet.Meet.meetId,
-        startDate: meet.Meet.startDate.toISOString().split("T")[0],
-        status: meet.Meet.statusId,
-        meets: [
-          {
-            title: meet.Meet.title,
-            description: meet.Meet.description,
-            startTime: meet.Meet.startTime,
-            endTime: meet.Meet.endTime,
+  const creatorDecline = await Meets.findOne({
+    where: {
+      userId: req.user.id,
+    },
+  });
+
+  let meets;
+  let result;
+
+  try {
+    if (creatorDecline === null) {
+      meets = await Partner.findAll({
+        where: {
+          userId: req.user.id,
+          statusId: 1,
+          startDate: {
+            [Op.gt]: TODAY_START,
+            [Op.lt]: NOW,
           },
-        ],
-        partner: [
-          {
-            name: meet.Meet.User.name,
-            email: meet.Meet.User.email,
-            company: meet.Meet.company,
+        },
+        order: [["startDate", "ASC"]],
+        include: [{ model: Meets }, { model: User }],
+      });
+
+      result = meets.map((meet) => {
+        return {
+          id: meet.meetId,
+          startDate: meet.startDate.toISOString().split("T")[0],
+          meets: [
+            {
+              title: meet.Meet.title,
+              description: meet.Meet.description,
+              startTime: meet.Meet.startTime,
+              endTime: meet.Meet.endTime,
+            },
+          ],
+          partner: [
+            {
+              name: meet.User.name,
+              email: meet.User.email,
+              company: meet.User.company,
+            },
+          ],
+        };
+      });
+    }
+
+    if (partnerDecline === null) {
+      meets = await Meets.findAll({
+        where: {
+          userId: req.user.id,
+          statusId: 1,
+          startDate: {
+            [Op.gt]: TODAY_START,
+            [Op.lt]: NOW,
           },
-        ],
-      };
-    });
+        },
+        order: [["startDate", "ASC"]],
+        include: [{ model: Partner, include: [{ model: User }] }],
+      });
+
+      result = meets.map((meet) => {
+        return {
+          id: meet.id,
+          startDate: meet.startDate.toISOString().split("T")[0],
+          meets: [
+            {
+              title: meet.title,
+              description: meet.description,
+              startTime: meet.startTime,
+              endTime: meet.endTime,
+            },
+          ],
+          partner: [
+            {
+              name: meet.Partners[0].User.name,
+              email: meet.Partners[0].User.email,
+              company: meet.Partners[0].User.company,
+            },
+          ],
+        };
+      });
+    }
 
     return res.json({
       status: 200,
@@ -211,7 +264,7 @@ router.get("/accepted", isAuth, async (req, res) => {
     const meets = await Partner.findAll({
       where: {
         userId: req.user.id,
-        statusId: 2,
+        statusId: 1,
       },
       order: [["startDate", "ASC"]],
       include: [{ model: Meets, include: [{ model: User }] }],
@@ -255,10 +308,10 @@ router.get("/accepted", isAuth, async (req, res) => {
   }
 });
 
-// @route    GET api/meets/declined
+// @route    GET api/meets/deleted
 // @desc     Get all declined meets
 // @access   Private
-router.get("/declined", isAuth, async (req, res) => {
+router.get("/deleted", isAuth, async (req, res) => {
   try {
     const meets = await Partner.findAll({
       where: {
@@ -294,7 +347,7 @@ router.get("/declined", isAuth, async (req, res) => {
 
     return res.json({
       status: 200,
-      msg: "Declined meets",
+      msg: "Deleted meets",
       result: result,
     });
   } catch (error) {
@@ -386,6 +439,7 @@ router.post("/create", isAuth, async (req, res) => {
       statusId: 3,
       userId: user,
       meetId: meet.id,
+      startDate: date,
     });
 
     return res.json({
@@ -423,7 +477,7 @@ router.get("/check/:id", isAuth, async (req, res) => {
 
     return res.json({
       status: 200,
-      msg: "Meet created",
+      msg: "Check meet",
       result: {
         id: partnerStatus.meetId,
         partnerStatus: partnerStatus.statusId,

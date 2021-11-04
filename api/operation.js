@@ -1,12 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const isAuth = require("../middleware/auth");
-const Sequelize = require("sequelize");
-const Op = Sequelize.Op;
 
 // Models
 const Meets = require("../models/Meets");
-const CancelledMeets = require("../models/Partner");
+const Partner = require("../models/Partner");
 
 //! const mailgun = require("mailgun-js");
 //! const DOMAIN = "mg.foodnet.ro";
@@ -31,32 +29,20 @@ router.post("/accept/:id", isAuth, async (req, res) => {
     });
   }
 
-  const meet = await CancelledMeets.findOne({
-    where: { userId: { [Op.ne]: req.user.id }, id: meetId },
-  });
-
-  // if (meet.status === 1) {
-  // 	return res.json({
-  // 		status: 401,
-  // 		msg: "Your partner declined this meet",
-  // 		result: [],
-  // 	});
-  // }
-
   try {
-    await CancelledMeets.update(
+    await Partner.update(
       {
-        status: 3,
-        accepted: 1,
+        statusId: 1,
       },
-      { where: { meetId: meetId } }
+      { where: { meetId: meetId, userId: req.user.id } }
     );
 
-    // await CancelledMeets.create({
-    // 	userId: req.user.id,
-    // 	status: 0,
-    // 	meetId: req.params.id,
-    // });
+    await Meets.update(
+      {
+        statusId: 1,
+      },
+      { where: { id: meetId, userId: req.user.id } }
+    );
 
     return res.json({
       status: 200,
@@ -87,25 +73,38 @@ router.post("/decline/:id", isAuth, async (req, res) => {
     });
   }
 
-  const meet = await Meets.findOne({
-    where: { userId: req.user.id, id: meetId },
+  const partnerDecline = await Partner.findOne({
+    where: {
+      userId: req.user.id,
+      meetId: meetId,
+    },
   });
 
-  if (!meet) {
-    return res.json({
-      status: 400,
-      msg: "Only your meet can decline",
-      result: [],
-    });
-  }
+  const creatorDecline = await Meets.findOne({
+    where: {
+      userId: req.user.id,
+      id: meetId,
+    },
+  });
 
   try {
-    await Meets.update(
-      {
-        statusId: 5,
-      },
-      { where: { id: meetId } }
-    );
+    if (creatorDecline === null) {
+      await Partner.update(
+        {
+          statusId: 2,
+        },
+        { where: { meetId: meetId, userId: req.user.id } }
+      );
+    }
+
+    if (partnerDecline === null) {
+      await Meets.update(
+        {
+          statusId: 2,
+        },
+        { where: { id: meetId, userId: req.user.id } }
+      );
+    }
 
     return res.json({
       status: 200,
@@ -122,27 +121,52 @@ router.post("/decline/:id", isAuth, async (req, res) => {
   }
 });
 
-// @route    POST api/operation/delete
+// @route    POST api/operation/delete/:id
 // @desc     User decline an accepted invitation
 // @access   Private
 router.post("/delete/:id", isAuth, async (req, res) => {
-  if (req.params.id == undefined) {
+  const meetId = req.params.id;
+
+  if (meetId == undefined) {
     return res.json({
       status: 400,
       msg: "Id is empty",
       result: [],
     });
   }
-  console.log(req.params.id);
+
+  const partnerDecline = await Partner.findOne({
+    where: {
+      userId: req.user.id,
+      meetId: meetId,
+    },
+  });
+
+  const creatorDecline = await Meets.findOne({
+    where: {
+      userId: req.user.id,
+      id: meetId,
+    },
+  });
 
   try {
-    await CancelledMeets.update(
-      {
-        status: 1,
-      },
-      { where: { meetId: req.params.id, userId: req.user.id } }
-    );
+    if (creatorDecline === null) {
+      await Partner.update(
+        {
+          statusId: 4,
+        },
+        { where: { meetId: meetId, userId: req.user.id } }
+      );
+    }
 
+    if (partnerDecline === null) {
+      await Meets.update(
+        {
+          statusId: 4,
+        },
+        { where: { id: meetId, userId: req.user.id } }
+      );
+    }
     return res.json({
       status: 200,
       msg: "Successfully deleted",

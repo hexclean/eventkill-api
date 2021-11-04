@@ -8,6 +8,7 @@ const Partner = sequelize.define("Partner", {
     allowNull: false,
     primaryKey: true,
   },
+  startDate: Sequelize.DATE,
 });
 
 module.exports = Partner;

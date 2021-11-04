@@ -92,7 +92,7 @@ router.get("/people/:name", isAuth, async (req, res) => {
   }
 });
 
-// @route    POST api/meets/today
+// @route    GET api/meets/today
 // @desc     Get all today meets
 // @access   Private
 router.get("/today", isAuth, async (req, res) => {
@@ -100,7 +100,7 @@ router.get("/today", isAuth, async (req, res) => {
   const NOW = new Date();
 
   try {
-    const meets = await Meet.findAll({
+    const meets = await Partner.findAll({
       where: {
         userId: req.user.id,
         statusId: 1,
@@ -109,28 +109,28 @@ router.get("/today", isAuth, async (req, res) => {
           [Op.lt]: NOW,
         },
       },
+      order: [["startDate", "ASC"]],
       include: [{ model: Meets, include: [{ model: User }] }],
     });
 
     const result = meets.map((meet) => {
       return {
-        id: meet.meetId,
-        startDate: meet.startDate.toISOString().split("T")[0],
-        status: meet.statusId,
+        id: meet.Meet.meetId,
+        startDate: meet.Meet.startDate.toISOString().split("T")[0],
+        status: meet.Meet.statusId,
         meets: [
           {
-            title: meet.title,
-            description: meet.description,
-            startTime: meet.startTime,
-            endTime: meet.endTime,
-            // startDate: meet.Meet.startDate.toISOString().slice(0, 10),
+            title: meet.Meet.title,
+            description: meet.Meet.description,
+            startTime: meet.Meet.startTime,
+            endTime: meet.Meet.endTime,
           },
         ],
         partner: [
           {
-            name: meet.Partner[0].User.name,
-            email: meet.Partner[0].User.email,
-            company: meet.Partner[0].company,
+            name: meet.Meet.User.name,
+            email: meet.Meet.User.email,
+            company: meet.Meet.company,
           },
         ],
       };
@@ -138,7 +138,7 @@ router.get("/today", isAuth, async (req, res) => {
 
     return res.json({
       status: 200,
-      msg: "Today meet list",
+      msg: "Today meets",
       result: result,
     });
   } catch (error) {
@@ -151,122 +151,15 @@ router.get("/today", isAuth, async (req, res) => {
   }
 });
 
-// @route    POST api/meets/pending
+// @route    GET api/meets/pending
 // @desc     Get all pending meets
 // @access   Private
 router.get("/pending", isAuth, async (req, res) => {
   try {
-    const meets = await CancelledMeets.findAll({
-      where: {
-        userId: { [Op.not]: [req.user.id] },
-
-        status: 0,
-      },
-      order: [["startDate", "ASC"]],
-
-      include: [{ model: Meets }, { model: User }],
-    });
-
-    const result = meets.map((meet) => {
-      return {
-        id: meet.meetId,
-        createdAt: meet.createdAt.toISOString().split("T")[0],
-        meets: [
-          {
-            title: meet.Meet.title,
-            description: meet.Meet.description,
-            time: meet.Meet.time,
-            startDate: meet.Meet.startDate.toISOString().slice(0, 10),
-          },
-        ],
-        partner: [
-          {
-            name: meet.User.name,
-            email: meet.User.email,
-            company: meet.User.company,
-          },
-        ],
-      };
-    });
-
-    return res.json({
-      status: 200,
-      msg: "Pending meet list",
-      result: result,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.json({
-      status: 200,
-      msg: "Server error",
-      result: [],
-    });
-  }
-});
-
-// @route    POST api/meets/pending
-// @desc     Get all pending meets
-// @access   Private
-router.get("/accepted", isAuth, async (req, res) => {
-  try {
-    const meets = await CancelledMeets.findAll({
-      where: {
-        userId: { [Op.not]: [req.user.id] },
-        // mine: 0,
-        accepted: 1,
-        status: 3,
-      },
-      order: [["startDate", "ASC"]],
-      include: [{ model: Meets }, { model: User }],
-    });
-
-    const result = meets.map((meet) => {
-      return {
-        id: meet.meetId,
-        createdAt: meet.createdAt.toISOString().split("T")[0],
-        meets: [
-          {
-            title: meet.Meet.title,
-            description: meet.Meet.description,
-            time: meet.Meet.time,
-            startDate: meet.Meet.startDate.toISOString().slice(0, 10),
-          },
-        ],
-        partner: [
-          {
-            name: meet.User.name,
-            email: meet.User.email,
-            company: meet.User.company,
-          },
-        ],
-      };
-    });
-
-    return res.json({
-      status: 200,
-      msg: "Pending meet list",
-      result: result,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.json({
-      status: 200,
-      msg: "Server error",
-      result: [],
-    });
-  }
-});
-
-// @route    POST api/meets/declined
-// @desc     Get all pending meets
-// @access   Private
-router.get("/declined", isAuth, async (req, res) => {
-  try {
-    const meets = await CancelledMeets.findAll({
+    const meets = await Partner.findAll({
       where: {
         userId: req.user.id,
-        // mine: 0,
-        status: 1,
+        statusId: 3,
       },
       order: [["startDate", "ASC"]],
       include: [{ model: Meets, include: [{ model: User }] }],
@@ -274,22 +167,22 @@ router.get("/declined", isAuth, async (req, res) => {
 
     const result = meets.map((meet) => {
       return {
-        id: meet.meetId,
-        createdAt: meet.createdAt.toISOString().split("T")[0],
-        // declinedAt: meet.updatedAt.toISOString().split("T")[0],
+        id: meet.Meet.meetId,
+        startDate: meet.Meet.startDate.toISOString().split("T")[0],
+        status: meet.Meet.statusId,
         meets: [
           {
             title: meet.Meet.title,
             description: meet.Meet.description,
-            time: meet.Meet.time,
-            startDate: meet.Meet.startDate.toISOString().slice(0, 10),
+            startTime: meet.Meet.startTime,
+            endTime: meet.Meet.endTime,
           },
         ],
         partner: [
           {
             name: meet.Meet.User.name,
             email: meet.Meet.User.email,
-            company: meet.Meet.User.company,
+            company: meet.Meet.company,
           },
         ],
       };
@@ -297,7 +190,7 @@ router.get("/declined", isAuth, async (req, res) => {
 
     return res.json({
       status: 200,
-      msg: "Pending meet list",
+      msg: "Pending meets",
       result: result,
     });
   } catch (error) {
@@ -310,39 +203,141 @@ router.get("/declined", isAuth, async (req, res) => {
   }
 });
 
-// @route    POST api/meets/calendar
-// @desc     Get all meets
+// @route    GET api/meets/pending
+// @desc     Get all accepted meets
 // @access   Private
-router.get("/calendar", isAuth, async (req, res) => {
+router.get("/accepted", isAuth, async (req, res) => {
   try {
-    const meets = await CancelledMeets.findAll({
+    const meets = await Partner.findAll({
       where: {
-        userId: { [Op.not]: [req.user.id] },
-        user: req.user.id,
+        userId: req.user.id,
+        statusId: 2,
       },
-
-      include: [{ model: Meets }, { model: User }],
+      order: [["startDate", "ASC"]],
+      include: [{ model: Meets, include: [{ model: User }] }],
     });
 
-    const resultFormat = meets.map((meet) => {
+    const result = meets.map((meet) => {
       return {
-        id: meet.meetId,
-        createdAt: meet.createdAt.toISOString().slice(0, 10),
-        startDate: meet.Meet.startDate,
-        status: meet.status,
+        id: meet.Meet.meetId,
+        startDate: meet.Meet.startDate.toISOString().split("T")[0],
+        status: meet.Meet.statusId,
         meets: [
           {
             title: meet.Meet.title,
             description: meet.Meet.description,
-            time: meet.Meet.time,
-            startDate: meet.Meet.startDate.toISOString().slice(0, 10),
+            startTime: meet.Meet.startTime,
+            endTime: meet.Meet.endTime,
           },
         ],
         partner: [
           {
-            name: meet.User.name,
-            email: meet.User.email,
-            company: meet.User.company,
+            name: meet.Meet.User.name,
+            email: meet.Meet.User.email,
+            company: meet.Meet.company,
+          },
+        ],
+      };
+    });
+
+    return res.json({
+      status: 200,
+      msg: "Accepted meet list",
+      result: result,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      status: 200,
+      msg: "Server error",
+      result: [],
+    });
+  }
+});
+
+// @route    GET api/meets/declined
+// @desc     Get all declined meets
+// @access   Private
+router.get("/declined", isAuth, async (req, res) => {
+  try {
+    const meets = await Partner.findAll({
+      where: {
+        userId: req.user.id,
+        statusId: 4,
+      },
+      order: [["startDate", "ASC"]],
+      include: [{ model: Meets, include: [{ model: User }] }],
+    });
+
+    const result = meets.map((meet) => {
+      return {
+        id: meet.Meet.meetId,
+        startDate: meet.Meet.startDate.toISOString().split("T")[0],
+        status: meet.Meet.statusId,
+        meets: [
+          {
+            title: meet.Meet.title,
+            description: meet.Meet.description,
+            startTime: meet.Meet.startTime,
+            endTime: meet.Meet.endTime,
+          },
+        ],
+        partner: [
+          {
+            name: meet.Meet.User.name,
+            email: meet.Meet.User.email,
+            company: meet.Meet.company,
+          },
+        ],
+      };
+    });
+
+    return res.json({
+      status: 200,
+      msg: "Declined meets",
+      result: result,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      status: 200,
+      msg: "Server error",
+      result: [],
+    });
+  }
+});
+
+// @route    GET api/meets/calendar
+// @desc     Get all meets
+// @access   Private
+router.get("/calendar", isAuth, async (req, res) => {
+  try {
+    const meets = await Partner.findAll({
+      where: {
+        userId: req.user.id,
+      },
+      order: [["startDate", "ASC"]],
+      include: [{ model: Meets, include: [{ model: User }] }],
+    });
+
+    const resultFormat = meets.map((meet) => {
+      return {
+        id: meet.Meet.meetId,
+        startDate: meet.Meet.startDate,
+        status: meet.Meet.statusId,
+        meets: [
+          {
+            title: meet.Meet.title,
+            description: meet.Meet.description,
+            startTime: meet.Meet.startTime,
+            endTime: meet.Meet.endTime,
+          },
+        ],
+        partner: [
+          {
+            name: meet.Meet.User.name,
+            email: meet.Meet.User.email,
+            company: meet.Meet.company,
           },
         ],
       };
@@ -357,7 +352,7 @@ router.get("/calendar", isAuth, async (req, res) => {
 
     return res.json({
       status: 200,
-      msg: "Today meet list",
+      msg: "All meets",
       result: result,
     });
   } catch (error) {
@@ -407,26 +402,33 @@ router.post("/create", isAuth, async (req, res) => {
   }
 });
 
-// @route    POST api/meets/calendar
-// @desc     Get all meets
+// @route    GET api/meets/check/:id
+// @desc     Check meet status
 // @access   Private
 router.get("/check/:id", isAuth, async (req, res) => {
   try {
-    const meet = await CancelledMeets.findAll({
-      where: { meetId: req.params.id, userId: { [Op.ne]: req.user.id } },
-    });
+    // const meet = await Partner.fin({
+    //   where: { meetId: req.params.id, userId: { [Op.ne]: req.user.id } },
+    // });
 
-    const result = meet.map((meet) => {
-      return {
-        id: meet.id,
-        status: meet.status,
-      };
-    });
+    const partnerStatus = await Partner.findByPk(req.params.id);
+    const creatorStatus = await Meets.findByPk(req.params.id);
+
+    // const result = meet.map((meet) => {
+    //   return {
+    //     id: meet.id,
+    //     status: meet.status,
+    //   };
+    // });
 
     return res.json({
       status: 200,
       msg: "Meet created",
-      result: result,
+      result: {
+        id: partnerStatus.meetId,
+        partnerStatus: partnerStatus.statusId,
+        creatorStatus: creatorStatus.statusId,
+      },
     });
   } catch (error) {
     console.log(error);
@@ -438,38 +440,37 @@ router.get("/check/:id", isAuth, async (req, res) => {
   }
 });
 
-// @route    POST api/meets/pending
-// @desc     Get all pending meets
+// @route    GET api/meets/sent
+// @desc     Get all created meets
 // @access   Private
 router.get("/sent", isAuth, async (req, res) => {
   try {
-    const meets = await CancelledMeets.findAll({
+    const meets = await Partner.findAll({
       where: {
         userId: req.user.id,
-        mine: 1,
       },
-      order: [["createdAt", "DESC"]],
-
+      order: [["startDate", "ASC"]],
       include: [{ model: Meets, include: [{ model: User }] }],
     });
 
     const result = meets.map((meet) => {
       return {
-        id: meet.meetId,
-        createdAt: meet.createdAt.toISOString().split("T")[0],
+        id: meet.Meet.meetId,
+        startDate: meet.Meet.startDate.toISOString().split("T")[0],
+        status: meet.Meet.statusId,
         meets: [
           {
             title: meet.Meet.title,
             description: meet.Meet.description,
-            time: meet.Meet.time,
-            startDate: meet.Meet.startDate.toISOString().slice(0, 10),
+            startTime: meet.Meet.startTime,
+            endTime: meet.Meet.endTime,
           },
         ],
         partner: [
           {
             name: meet.Meet.User.name,
             email: meet.Meet.User.email,
-            company: meet.Meet.User.company,
+            company: meet.Meet.company,
           },
         ],
       };
@@ -477,7 +478,7 @@ router.get("/sent", isAuth, async (req, res) => {
 
     return res.json({
       status: 200,
-      msg: "Pending meet list",
+      msg: "Created meets",
       result: result,
     });
   } catch (error) {

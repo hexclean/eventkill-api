@@ -339,7 +339,7 @@ router.get("/deleted", isAuth, async (req, res) => {
           {
             name: meet.Meet.User.name,
             email: meet.Meet.User.email,
-            company: meet.Meet.company,
+            company: meet.Meet.User.company,
           },
         ],
       };

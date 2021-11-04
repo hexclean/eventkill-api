@@ -59,68 +59,6 @@ router.post("/accept/:id", isAuth, async (req, res) => {
   }
 });
 
-// @route    POST api/operation/decline
-// @desc     Decline a meet
-// @access   Private
-router.post("/decline/:id", isAuth, async (req, res) => {
-  const meetId = req.params.id;
-
-  if (meetId == undefined) {
-    return res.json({
-      status: 400,
-      msg: "Id is empty",
-      result: [],
-    });
-  }
-
-  const partnerDecline = await Partner.findOne({
-    where: {
-      userId: req.user.id,
-      meetId: meetId,
-    },
-  });
-
-  const creatorDecline = await Meets.findOne({
-    where: {
-      userId: req.user.id,
-      id: meetId,
-    },
-  });
-
-  try {
-    if (creatorDecline === null) {
-      await Partner.update(
-        {
-          statusId: 2,
-        },
-        { where: { meetId: meetId, userId: req.user.id } }
-      );
-    }
-
-    if (partnerDecline === null) {
-      await Meets.update(
-        {
-          statusId: 2,
-        },
-        { where: { id: meetId, userId: req.user.id } }
-      );
-    }
-
-    return res.json({
-      status: 200,
-      msg: "Successfully declined",
-      result: [],
-    });
-  } catch (error) {
-    console.log(error);
-    return res.json({
-      status: 500,
-      msg: "Server error",
-      result: [],
-    });
-  }
-});
-
 // @route    POST api/operation/delete/:id
 // @desc     User decline an accepted invitation
 // @access   Private

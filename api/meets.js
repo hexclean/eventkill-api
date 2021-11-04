@@ -324,9 +324,9 @@ router.get("/deleted", isAuth, async (req, res) => {
 
     const result = meets.map((meet) => {
       return {
-        id: meet.Meet.meetId,
-        startDate: meet.Meet.startDate.toISOString().split("T")[0],
-        status: meet.Meet.statusId,
+        id: meet.meetId,
+        startDate: meet.startDate.toISOString().split("T")[0],
+        status: meet.statusId,
         meets: [
           {
             title: meet.Meet.title,

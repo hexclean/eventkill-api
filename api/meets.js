@@ -3,7 +3,7 @@ const router = express.Router();
 const isAuth = require("../middleware/auth");
 const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
-
+const _ = require("lodash");
 // Models
 const User = require("../models/User");
 const Meets = require("../models/Meets");
@@ -98,207 +98,165 @@ router.get("/people/:name", isAuth, async (req, res) => {
 router.get("/today", isAuth, async (req, res) => {
   const TODAY_START = new Date().setHours(0, 0, 0, 0);
   const NOW = new Date();
-
-  const partnerDecline = await Partner.findOne({
+  const meetsPartner = await Partner.findAll({
     where: {
       userId: req.user.id,
+      statusId: 1,
+      startDate: {
+        [Op.gt]: TODAY_START,
+        [Op.lt]: NOW,
+      },
     },
+    order: [["startDate", "ASC"]],
+    include: [{ model: Meets, include: [{ model: User }] }],
   });
 
-  const creatorDecline = await Meets.findOne({
+  const resultPartnerColumn = meetsPartner.map((meet) => {
+    return {
+      id: meet.Meet.id,
+      startDate: meet.Meet.startDate.toISOString().split("T")[0],
+      status: meet.Meet.statusId,
+      meets: [
+        {
+          title: meet.Meet.title,
+          description: meet.Meet.description,
+          startTime: meet.Meet.startTime,
+          endTime: meet.Meet.endTime,
+        },
+      ],
+      partner: [
+        {
+          name: meet.Meet.User.name,
+          email: meet.Meet.User.email,
+          company: meet.Meet.User.company,
+        },
+      ],
+    };
+  });
+
+  const meetsCreator = await Meets.findAll({
     where: {
       userId: req.user.id,
+      statusId: 1,
+      startDate: {
+        [Op.gt]: TODAY_START,
+        [Op.lt]: NOW,
+      },
     },
+    order: [["startDate", "ASC"]],
+    include: [{ model: Partner, include: [{ model: User }] }],
   });
 
-  let meets;
-  let result;
-
-  try {
-    if (creatorDecline === null) {
-      meets = await Partner.findAll({
-        where: {
-          userId: req.user.id,
-          statusId: 1,
-          startDate: {
-            [Op.gt]: TODAY_START,
-            [Op.lt]: NOW,
-          },
+  const resultCreatorColumn = meetsCreator.map((meet) => {
+    return {
+      id: meet.id,
+      startDate: meet.startDate.toISOString().split("T")[0],
+      meets: [
+        {
+          title: meet.title,
+          description: meet.description,
+          startTime: meet.startTime,
+          endTime: meet.endTime,
         },
-        order: [["startDate", "ASC"]],
-        include: [{ model: Meets }, { model: User }],
-      });
-
-      result = meets.map((meet) => {
-        return {
-          id: meet.meetId,
-          startDate: meet.startDate.toISOString().split("T")[0],
-          meets: [
-            {
-              title: meet.Meet.title,
-              description: meet.Meet.description,
-              startTime: meet.Meet.startTime,
-              endTime: meet.Meet.endTime,
-            },
-          ],
-          partner: [
-            {
-              name: meet.User.name,
-              email: meet.User.email,
-              company: meet.User.company,
-            },
-          ],
-        };
-      });
-    }
-
-    if (partnerDecline === null) {
-      meets = await Meets.findAll({
-        where: {
-          userId: req.user.id,
-          statusId: 1,
-          startDate: {
-            [Op.gt]: TODAY_START,
-            [Op.lt]: NOW,
-          },
+      ],
+      partner: [
+        {
+          name: meet.Partners[0].User.name,
+          email: meet.Partners[0].User.email,
+          company: meet.Partners[0].User.company,
         },
-        order: [["startDate", "ASC"]],
-        include: [{ model: Partner, include: [{ model: User }] }],
-      });
+      ],
+    };
+  });
 
-      result = meets.map((meet) => {
-        return {
-          id: meet.id,
-          startDate: meet.startDate.toISOString().split("T")[0],
-          meets: [
-            {
-              title: meet.title,
-              description: meet.description,
-              startTime: meet.startTime,
-              endTime: meet.endTime,
-            },
-          ],
-          partner: [
-            {
-              name: meet.Partners[0].User.name,
-              email: meet.Partners[0].User.email,
-              company: meet.Partners[0].User.company,
-            },
-          ],
-        };
-      });
-    }
+  var result = _.unionBy(resultPartnerColumn, resultCreatorColumn);
 
-    return res.json({
-      status: 200,
-      msg: "Today meets",
-      result: result,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.json({
-      status: 500,
-      msg: "Server error",
-      result: [],
-    });
-  }
+  return res.json({
+    status: 200,
+    msg: "Pending meets",
+    result: result,
+  });
 });
 
 // @route    GET api/meets/pending
 // @desc     Get all pending meets
 // @access   Private
 router.get("/pending", isAuth, async (req, res) => {
-  const partnerDecline = await Partner.findOne({
-    where: {
-      userId: req.user.id,
-    },
-  });
-
-  const creatorDecline = await Meets.findOne({
-    where: {
-      userId: req.user.id,
-    },
-  });
-
-  let meets;
-  let result;
-
   try {
-    if (creatorDecline === null) {
-      meets = await Partner.findAll({
-        where: {
-          userId: req.user.id,
-          statusId: 3,
-        },
-        order: [["startDate", "ASC"]],
-        include: [{ model: Meets }, { model: User }],
-      });
+    const meetsPartner = await Partner.findAll({
+      where: {
+        userId: req.user.id,
+        statusId: 3,
+      },
+      order: [["startDate", "ASC"]],
+      include: [{ model: Meets, include: [{ model: User }] }],
+    });
 
-      result = meets.map((meet) => {
-        return {
-          id: meet.meetId,
-          startDate: meet.startDate.toISOString().split("T")[0],
-          meets: [
-            {
-              title: meet.Meet.title,
-              description: meet.Meet.description,
-              startTime: meet.Meet.startTime,
-              endTime: meet.Meet.endTime,
-            },
-          ],
-          partner: [
-            {
-              name: meet.User.name,
-              email: meet.User.email,
-              company: meet.User.company,
-            },
-          ],
-        };
-      });
-    }
+    const resultPartnerColumn = meetsPartner.map((meet) => {
+      return {
+        id: meet.Meet.id,
+        startDate: meet.Meet.startDate.toISOString().split("T")[0],
+        status: meet.Meet.statusId,
+        meets: [
+          {
+            title: meet.Meet.title,
+            description: meet.Meet.description,
+            startTime: meet.Meet.startTime,
+            endTime: meet.Meet.endTime,
+          },
+        ],
+        partner: [
+          {
+            name: meet.Meet.User.name,
+            email: meet.Meet.User.email,
+            company: meet.Meet.User.company,
+          },
+        ],
+      };
+    });
 
-    if (partnerDecline === null) {
-      meets = await Meets.findAll({
-        where: {
-          userId: req.user.id,
-          statusId: 3,
-        },
-        order: [["startDate", "ASC"]],
-        include: [{ model: Partner, include: [{ model: User }] }],
-      });
+    const meetsCreator = await Meets.findAll({
+      where: {
+        userId: req.user.id,
+        statusId: 3,
+      },
+      order: [["startDate", "ASC"]],
+      include: [{ model: Partner, include: [{ model: User }] }],
+    });
 
-      result = meets.map((meet) => {
-        return {
-          id: meet.id,
-          startDate: meet.startDate.toISOString().split("T")[0],
-          meets: [
-            {
-              title: meet.title,
-              description: meet.description,
-              startTime: meet.startTime,
-              endTime: meet.endTime,
-            },
-          ],
-          partner: [
-            {
-              name: meet.Partners[0].User.name,
-              email: meet.Partners[0].User.email,
-              company: meet.Partners[0].User.company,
-            },
-          ],
-        };
-      });
-    }
+    const resultCreatorColumn = meetsCreator.map((meet) => {
+      return {
+        id: meet.id,
+        startDate: meet.startDate.toISOString().split("T")[0],
+        meets: [
+          {
+            title: meet.title,
+            description: meet.description,
+            startTime: meet.startTime,
+            endTime: meet.endTime,
+          },
+        ],
+        partner: [
+          {
+            name: meet.Partners[0].User.name,
+            email: meet.Partners[0].User.email,
+            company: meet.Partners[0].User.company,
+          },
+        ],
+      };
+    });
+
+    var result = _.unionBy(resultPartnerColumn, resultCreatorColumn);
 
     return res.json({
       status: 200,
-      msg: "Today meets",
+      msg: "Pending meets",
       result: result,
     });
   } catch (error) {
     console.log(error);
     return res.json({
-      status: 500,
+      status: 200,
       msg: "Server error",
       result: [],
     });
@@ -309,97 +267,81 @@ router.get("/pending", isAuth, async (req, res) => {
 // @desc     Get all accepted meets
 // @access   Private
 router.get("/accepted", isAuth, async (req, res) => {
-  const partnerDecline = await Partner.findOne({
-    where: {
-      userId: req.user.id,
-    },
-  });
-
-  const creatorDecline = await Meets.findOne({
-    where: {
-      userId: req.user.id,
-    },
-  });
-
-  let meets;
-  let result;
-
   try {
-    if (creatorDecline === null) {
-      meets = await Partner.findAll({
-        where: {
-          userId: req.user.id,
-          statusId: 1,
-        },
-        order: [["startDate", "ASC"]],
-        include: [{ model: Meets }, { model: User }],
-      });
+    const meetsPartner = await Partner.findAll({
+      where: {
+        userId: req.user.id,
+        statusId: 1,
+      },
+      order: [["startDate", "ASC"]],
+      include: [{ model: Meets, include: [{ model: User }] }],
+    });
 
-      result = meets.map((meet) => {
-        return {
-          id: meet.meetId,
-          startDate: meet.startDate.toISOString().split("T")[0],
-          meets: [
-            {
-              title: meet.Meet.title,
-              description: meet.Meet.description,
-              startTime: meet.Meet.startTime,
-              endTime: meet.Meet.endTime,
-            },
-          ],
-          partner: [
-            {
-              name: meet.User.name,
-              email: meet.User.email,
-              company: meet.User.company,
-            },
-          ],
-        };
-      });
-    }
+    const resultPartnerColumn = meetsPartner.map((meet) => {
+      return {
+        id: meet.Meet.id,
+        startDate: meet.Meet.startDate.toISOString().split("T")[0],
+        status: meet.Meet.statusId,
+        meets: [
+          {
+            title: meet.Meet.title,
+            description: meet.Meet.description,
+            startTime: meet.Meet.startTime,
+            endTime: meet.Meet.endTime,
+          },
+        ],
+        partner: [
+          {
+            name: meet.Meet.User.name,
+            email: meet.Meet.User.email,
+            company: meet.Meet.User.company,
+          },
+        ],
+      };
+    });
 
-    if (partnerDecline === null) {
-      meets = await Meets.findAll({
-        where: {
-          userId: req.user.id,
-          statusId: 1,
-        },
-        order: [["startDate", "ASC"]],
-        include: [{ model: Partner, include: [{ model: User }] }],
-      });
+    const meetsCreator = await Meets.findAll({
+      where: {
+        userId: req.user.id,
+        statusId: 1,
+      },
+      order: [["startDate", "ASC"]],
+      include: [{ model: Partner, include: [{ model: User }] }],
+    });
 
-      result = meets.map((meet) => {
-        return {
-          id: meet.id,
-          startDate: meet.startDate.toISOString().split("T")[0],
-          meets: [
-            {
-              title: meet.title,
-              description: meet.description,
-              startTime: meet.startTime,
-              endTime: meet.endTime,
-            },
-          ],
-          partner: [
-            {
-              name: meet.Partners[0].User.name,
-              email: meet.Partners[0].User.email,
-              company: meet.Partners[0].User.company,
-            },
-          ],
-        };
-      });
-    }
+    const resultCreatorColumn = meetsCreator.map((meet) => {
+      return {
+        id: meet.id,
+        startDate: meet.startDate.toISOString().split("T")[0],
+        meets: [
+          {
+            title: meet.title,
+            description: meet.description,
+            startTime: meet.startTime,
+            endTime: meet.endTime,
+          },
+        ],
+        partner: [
+          {
+            name: meet.Partners[0].User.name,
+            email: meet.Partners[0].User.email,
+            company: meet.Partners[0].User.company,
+          },
+        ],
+      };
+    });
+
+    var result = _.unionBy(resultPartnerColumn, resultCreatorColumn);
 
     return res.json({
       status: 200,
-      msg: "Today meets",
+      msg: "Accepted meets",
       result: result,
     });
   } catch (error) {
     console.log(error);
     return res.json({
-      status: 500,
+      status: 200,
       msg: "Server error",
       result: [],
     });
@@ -410,91 +352,75 @@ router.get("/accepted", isAuth, async (req, res) => {
 // @desc     Get all declined meets
 // @access   Private
 router.get("/deleted", isAuth, async (req, res) => {
-  const partnerDecline = await Partner.findOne({
-    where: {
-      userId: req.user.id,
-    },
-  });
-
-  const creatorDecline = await Meets.findOne({
-    where: {
-      userId: req.user.id,
-    },
-  });
-
-  let meets;
-  let result;
-
   try {
-    if (creatorDecline === null) {
-      meets = await Partner.findAll({
-        where: {
-          userId: req.user.id,
-          statusId: 4,
-        },
-        order: [["startDate", "ASC"]],
-        include: [{ model: Meets }, { model: User }],
-      });
+    const meetsPartner = await Partner.findAll({
+      where: {
+        userId: req.user.id,
+        statusId: 4,
+      },
+      order: [["startDate", "ASC"]],
+      include: [{ model: Meets, include: [{ model: User }] }],
+    });
 
-      result = meets.map((meet) => {
-        return {
-          id: meet.meetId,
-          startDate: meet.startDate.toISOString().split("T")[0],
-          meets: [
-            {
-              title: meet.Meet.title,
-              description: meet.Meet.description,
-              startTime: meet.Meet.startTime,
-              endTime: meet.Meet.endTime,
-            },
-          ],
-          partner: [
-            {
-              name: meet.User.name,
-              email: meet.User.email,
-              company: meet.User.company,
-            },
-          ],
-        };
-      });
-    }
+    const resultPartnerColumn = meetsPartner.map((meet) => {
+      return {
+        id: meet.Meet.id,
+        startDate: meet.Meet.startDate.toISOString().split("T")[0],
+        status: meet.Meet.statusId,
+        meets: [
+          {
+            title: meet.Meet.title,
+            description: meet.Meet.description,
+            startTime: meet.Meet.startTime,
+            endTime: meet.Meet.endTime,
+          },
+        ],
+        partner: [
+          {
+            name: meet.Meet.User.name,
+            email: meet.Meet.User.email,
+            company: meet.Meet.User.company,
+          },
+        ],
+      };
+    });
 
-    if (partnerDecline === null) {
-      meets = await Meets.findAll({
-        where: {
-          userId: req.user.id,
-          statusId: 4,
-        },
-        order: [["startDate", "ASC"]],
-        include: [{ model: Partner, include: [{ model: User }] }],
-      });
+    const meetsCreator = await Meets.findAll({
+      where: {
+        userId: req.user.id,
+        statusId: 4,
+      },
+      order: [["startDate", "ASC"]],
+      include: [{ model: Partner, include: [{ model: User }] }],
+    });
 
-      result = meets.map((meet) => {
-        return {
-          id: meet.id,
-          startDate: meet.startDate.toISOString().split("T")[0],
-          meets: [
-            {
-              title: meet.title,
-              description: meet.description,
-              startTime: meet.startTime,
-              endTime: meet.endTime,
-            },
-          ],
-          partner: [
-            {
-              name: meet.Partners[0].User.name,
-              email: meet.Partners[0].User.email,
-              company: meet.Partners[0].User.company,
-            },
-          ],
-        };
-      });
-    }
+    const resultCreatorColumn = meetsCreator.map((meet) => {
+      return {
+        id: meet.id,
+        startDate: meet.startDate.toISOString().split("T")[0],
+        meets: [
+          {
+            title: meet.title,
+            description: meet.description,
+            startTime: meet.startTime,
+            endTime: meet.endTime,
+          },
+        ],
+        partner: [
+          {
+            name: meet.Partners[0].User.name,
+            email: meet.Partners[0].User.email,
+            company: meet.Partners[0].User.company,
+          },
+        ],
+      };
+    });
+
+    var result = _.unionBy(resultPartnerColumn, resultCreatorColumn);
 
     return res.json({
       status: 200,
-      msg: "Today meets",
+      msg: "Deleted meets",
       result: result,
     });
   } catch (error) {
@@ -512,7 +438,7 @@ router.get("/deleted", isAuth, async (req, res) => {
 // @access   Private
 router.get("/calendar", isAuth, async (req, res) => {
   try {
-    const meets = await Partner.findAll({
+    const meetsPartner = await Partner.findAll({
       where: {
         userId: req.user.id,
       },
@@ -520,11 +446,11 @@ router.get("/calendar", isAuth, async (req, res) => {
       include: [{ model: Meets, include: [{ model: User }] }],
     });
 
-    const resultFormat = meets.map((meet) => {
+    const resultPartnerColumn = meetsPartner.map((meet) => {
       return {
-        id: meet.Meet.meetId,
+        id: meet.Meet.id,
         startDate: meet.Meet.startDate,
-        formattedStartDate: meet.startDate.toISOString().split("T")[0],
+        formattedStartDate: meet.Meet.startDate.toISOString().split("T")[0],
         status: meet.Meet.statusId,
         meets: [
           {
@@ -538,13 +464,46 @@ router.get("/calendar", isAuth, async (req, res) => {
           {
             name: meet.Meet.User.name,
             email: meet.Meet.User.email,
-            company: meet.Meet.company,
+            company: meet.Meet.User.company,
           },
         ],
       };
     });
 
-    const result = resultFormat.reduce(function (r, a) {
+    const meetsCreator = await Meets.findAll({
+      where: {
+        userId: req.user.id,
+      },
+      order: [["startDate", "ASC"]],
+      include: [{ model: Partner, include: [{ model: User }] }],
+    });
+
+    const resultCreatorColumn = meetsCreator.map((meet) => {
+      return {
+        id: meet.id,
+        startDate: meet.startDate,
+        formattedStartDate: meet.startDate.toISOString().split("T")[0],
+        meets: [
+          {
+            title: meet.title,
+            description: meet.description,
+            startTime: meet.startTime,
+            endTime: meet.endTime,
+          },
+        ],
+        partner: [
+          {
+            name: meet.Partners[0].User.name,
+            email: meet.Partners[0].User.email,
+            company: meet.Partners[0].User.company,
+          },
+        ],
+      };
+    });
+
+    const merged = _.unionBy(resultPartnerColumn, resultCreatorColumn);
+
+    const result = merged.reduce(function (r, a) {
       r[a.startDate.toISOString().slice(0, 10)] =
         r[a.startDate.toISOString().slice(0, 10)] || [];
       r[a.startDate.toISOString().slice(0, 10)].push(a);
@@ -553,7 +512,7 @@ router.get("/calendar", isAuth, async (req, res) => {
 
     return res.json({
       status: 200,
-      msg: "All meets",
+      msg: "Calendar meets",
       result: result,
     });
   } catch (error) {
@@ -647,32 +606,32 @@ router.get("/check/:id", isAuth, async (req, res) => {
 // @access   Private
 router.get("/sent", isAuth, async (req, res) => {
   try {
-    const meets = await Partner.findAll({
+    const meets = await Meets.findAll({
       where: {
         userId: req.user.id,
       },
       order: [["startDate", "ASC"]],
-      include: [{ model: Meets, include: [{ model: User }] }],
+      include: [{ model: Partner, include: [{ model: User }] }],
     });
 
     const result = meets.map((meet) => {
       return {
-        id: meet.Meet.meetId,
-        startDate: meet.Meet.startDate.toISOString().split("T")[0],
-        status: meet.Meet.statusId,
+        id: meet.meetId,
+        startDate: meet.startDate.toISOString().split("T")[0],
+        status: meet.statusId,
         meets: [
           {
-            title: meet.Meet.title,
-            description: meet.Meet.description,
-            startTime: meet.Meet.startTime,
-            endTime: meet.Meet.endTime,
+            title: meet.title,
+            description: meet.description,
+            startTime: meet.startTime,
+            endTime: meet.endTime,
           },
         ],
         partner: [
           {
-            name: meet.Meet.User.name,
-            email: meet.Meet.User.email,
-            company: meet.Meet.company,
+            name: meet.Partners[0].User.name,
+            email: meet.Partners[0].User.email,
+            company: meet.Partners[0].User.company,
           },
         ],
       };

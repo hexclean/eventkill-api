@@ -97,14 +97,12 @@ router.get("/people/:name", isAuth, async (req, res) => {
 // @access   Private
 router.get("/today", isAuth, async (req, res) => {
   const TODAY_START = new Date().setHours(0, 0, 0, 0);
-  const NOW = new Date();
   const meetsPartner = await Partner.findAll({
     where: {
       userId: req.user.id,
       statusId: 1,
       startDate: {
         [Op.gt]: TODAY_START,
-        [Op.lt]: NOW,
       },
     },
     order: [["startDate", "ASC"]],
@@ -140,12 +138,13 @@ router.get("/today", isAuth, async (req, res) => {
       statusId: 1,
       startDate: {
         [Op.gt]: TODAY_START,
-        [Op.lt]: NOW,
       },
     },
     order: [["startDate", "ASC"]],
     include: [{ model: Partner, include: [{ model: User }] }],
   });
+  // console.log(meetsCreator[0].createdAt);
+  // console.log(meetsCreator[0].startDate);
 
   const resultCreatorColumn = meetsCreator.map((meet) => {
     return {
@@ -214,39 +213,6 @@ router.get("/pending", isAuth, async (req, res) => {
         ],
       };
     });
-
-    // const meetsCreator = await Meets.findAll({
-    //   where: {
-    //     userId: req.user.id,
-    //     statusId: 3,
-    //   },
-    //   order: [["startDate", "ASC"]],
-    //   include: [{ model: Partner, include: [{ model: User }] }],
-    // });
-
-    // const resultCreatorColumn = meetsCreator.map((meet) => {
-    //   return {
-    //     id: meet.id,
-    //     startDate: meet.startDate.toISOString().split("T")[0],
-    //     meets: [
-    //       {
-    //         title: meet.title,
-    //         description: meet.description,
-    //         startTime: meet.startTime,
-    //         endTime: meet.endTime,
-    //       },
-    //     ],
-    //     partner: [
-    //       {
-    //         name: meet.Partners[0].User.name,
-    //         email: meet.Partners[0].User.email,
-    //         company: meet.Partners[0].User.company,
-    //       },
-    //     ],
-    //   };
-    // });
-
-    // var result = _.unionBy(resultPartnerColumn, resultCreatorColumn);
 
     return res.json({
       status: 200,

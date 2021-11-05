@@ -616,7 +616,7 @@ router.get("/sent", isAuth, async (req, res) => {
 
     const result = meets.map((meet) => {
       return {
-        id: meet.meetId,
+        id: meet.id,
         startDate: meet.startDate.toISOString().split("T")[0],
         status: meet.statusId,
         meets: [

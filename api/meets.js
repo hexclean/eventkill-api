@@ -449,6 +449,7 @@ router.get("/calendar", isAuth, async (req, res) => {
         id: meet.id,
         startDate: meet.startDate,
         formattedStartDate: meet.startDate.toISOString().split("T")[0],
+        status: meet.statusId,
         meets: [
           {
             title: meet.title,

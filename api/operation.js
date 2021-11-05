@@ -41,7 +41,7 @@ router.post("/accept/:id", isAuth, async (req, res) => {
       {
         statusId: 1,
       },
-      { where: { id: meetId, userId: req.user.id } }
+      { where: { id: meetId } }
     );
 
     return res.json({

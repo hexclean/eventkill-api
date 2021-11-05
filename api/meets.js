@@ -183,7 +183,7 @@ router.get("/today", isAuth, async (req, res) => {
 // @access   Private
 router.get("/pending", isAuth, async (req, res) => {
   try {
-    const meetsPartner = await Partner.findAll({
+    const meets = await Partner.findAll({
       where: {
         userId: req.user.id,
         statusId: 3,
@@ -192,7 +192,7 @@ router.get("/pending", isAuth, async (req, res) => {
       include: [{ model: Meets, include: [{ model: User }] }],
     });
 
-    const resultPartnerColumn = meetsPartner.map((meet) => {
+    const result = meets.map((meet) => {
       return {
         id: meet.Meet.id,
         startDate: meet.Meet.startDate.toISOString().split("T")[0],
@@ -215,38 +215,38 @@ router.get("/pending", isAuth, async (req, res) => {
       };
     });
 
-    const meetsCreator = await Meets.findAll({
-      where: {
-        userId: req.user.id,
-        statusId: 3,
-      },
-      order: [["startDate", "ASC"]],
-      include: [{ model: Partner, include: [{ model: User }] }],
-    });
+    // const meetsCreator = await Meets.findAll({
+    //   where: {
+    //     userId: req.user.id,
+    //     statusId: 3,
+    //   },
+    //   order: [["startDate", "ASC"]],
+    //   include: [{ model: Partner, include: [{ model: User }] }],
+    // });
 
-    const resultCreatorColumn = meetsCreator.map((meet) => {
-      return {
-        id: meet.id,
-        startDate: meet.startDate.toISOString().split("T")[0],
-        meets: [
-          {
-            title: meet.title,
-            description: meet.description,
-            startTime: meet.startTime,
-            endTime: meet.endTime,
-          },
-        ],
-        partner: [
-          {
-            name: meet.Partners[0].User.name,
-            email: meet.Partners[0].User.email,
-            company: meet.Partners[0].User.company,
-          },
-        ],
-      };
-    });
+    // const resultCreatorColumn = meetsCreator.map((meet) => {
+    //   return {
+    //     id: meet.id,
+    //     startDate: meet.startDate.toISOString().split("T")[0],
+    //     meets: [
+    //       {
+    //         title: meet.title,
+    //         description: meet.description,
+    //         startTime: meet.startTime,
+    //         endTime: meet.endTime,
+    //       },
+    //     ],
+    //     partner: [
+    //       {
+    //         name: meet.Partners[0].User.name,
+    //         email: meet.Partners[0].User.email,
+    //         company: meet.Partners[0].User.company,
+    //       },
+    //     ],
+    //   };
+    // });
 
-    var result = _.unionBy(resultPartnerColumn, resultCreatorColumn);
+    // var result = _.unionBy(resultPartnerColumn, resultCreatorColumn);
 
     return res.json({
       status: 200,

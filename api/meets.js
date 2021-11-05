@@ -534,41 +534,29 @@ router.post("/create", isAuth, async (req, res) => {
 // @desc     Check meet status
 // @access   Private
 router.get("/check/:id", isAuth, async (req, res) => {
-  const meetId = req.params.id;
-  console.log("213", 31232);
   try {
-    let result;
+    // const meet = await Partner.fin({
+    //   where: { meetId: req.params.id, userId: { [Op.ne]: req.user.id } },
+    // });
 
-    const partnerDecline = await Partner.findOne({
-      where: {
-        userId: req.user.id,
-        meetId: meetId,
-      },
-    });
+    const partnerStatus = await Partner.findByPk(req.params.id);
+    const creatorStatus = await Meets.findByPk(req.params.id);
 
-    const creatorDecline = await Meets.findOne({
-      where: {
-        userId: req.user.id,
-        id: meetId,
-      },
-    });
-
-    if (partnerDecline === null) {
-      result = {
-        id: creatorDecline.id,
-        status: creatorDecline.statusId,
-      };
-    } else {
-      result = {
-        id: partnerDecline.meetId,
-        status: partnerDecline.statusId,
-      };
-    }
+    // const result = meet.map((meet) => {
+    //   return {
+    //     id: meet.id,
+    //     status: meet.status,
+    //   };
+    // });
 
     return res.json({
       status: 200,
       msg: "Check meet",
-      result: result,
+      result: {
+        id: partnerStatus.meetId,
+        partnerStatus: partnerStatus.statusId,
+        creatorStatus: creatorStatus.statusId,
+      },
     });
   } catch (error) {
     console.log(error);

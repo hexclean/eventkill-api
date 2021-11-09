@@ -539,7 +539,9 @@ router.get("/check/:id", isAuth, async (req, res) => {
     //   where: { meetId: req.params.id, userId: { [Op.ne]: req.user.id } },
     // });
 
-    const partnerStatus = await Partner.findByPk(req.params.id);
+    const partnerStatus = await Partner.findOne({
+      where: { meetId: req.params.id },
+    });
     const creatorStatus = await Meets.findByPk(req.params.id);
 
     // const result = meet.map((meet) => {

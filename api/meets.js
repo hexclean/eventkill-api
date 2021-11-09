@@ -501,6 +501,7 @@ router.post("/create", isAuth, async (req, res) => {
       req.body;
 
     console.log(req.body);
+    console.log("email length is: ", email.length);
 
     const meet = await Meets.create({
       title,

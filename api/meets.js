@@ -497,7 +497,10 @@ router.get("/calendar", isAuth, async (req, res) => {
 // @access   Private
 router.post("/create", isAuth, async (req, res) => {
   try {
-    const { title, user, description, date, startTime, endTime } = req.body;
+    const { title, user, description, date, startTime, endTime, email } =
+      req.body;
+
+    console.log(req.body);
 
     const meet = await Meets.create({
       title,

@@ -501,7 +501,13 @@ router.post("/create", isAuth, async (req, res) => {
       req.body;
 
     console.log("user", user);
-    console.log("user length is", user.length);
+    if (user === undefined) {
+      console.log("USER IS UNDEFINED FIRST IF");
+    }
+    if (user != undefined) {
+      console.log("USER IS not ");
+    }
+    // console.log("user length is", user.length);
     // if (email.length === 0) {
     //   const meet = await Meets.create({
     //     title,

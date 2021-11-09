@@ -500,25 +500,45 @@ router.post("/create", isAuth, async (req, res) => {
     const { title, user, description, date, startTime, endTime, email } =
       req.body;
 
-    console.log(req.body);
-    console.log("email length is: ", email.length);
+    console.log("user", user);
+    console.log("user length is", user.length);
+    // if (email.length === 0) {
+    //   const meet = await Meets.create({
+    //     title,
+    //     description,
+    //     userId: req.user.id,
+    //     statusId: 3,
+    //     startTime,
+    //     endTime,
+    //     startDate: date,
+    //   });
 
-    const meet = await Meets.create({
-      title,
-      description,
-      userId: req.user.id,
-      statusId: 3,
-      startTime,
-      endTime,
-      startDate: date,
-    });
+    //   await Partner.create({
+    //     statusId: 3,
+    //     userId: user,
+    //     meetId: meet.id,
+    //     startDate: date,
+    //   });
+    // }
 
-    await Partner.create({
-      statusId: 3,
-      userId: user,
-      meetId: meet.id,
-      startDate: date,
-    });
+    // if (user != 0) {
+    //   const meet = await Meets.create({
+    //     title,
+    //     description,
+    //     userId: req.user.id,
+    //     statusId: 3,
+    //     startTime,
+    //     endTime,
+    //     startDate: date,
+    //   });
+
+    //   await Partner.create({
+    //     statusId: 3,
+    //     userId: user,
+    //     meetId: meet.id,
+    //     startDate: date,
+    //   });
+    // }
 
     return res.json({
       status: 200,

@@ -500,51 +500,55 @@ router.post("/create", isAuth, async (req, res) => {
     const { title, user, description, date, startTime, endTime, email } =
       req.body;
 
-    console.log("user", user);
-    if (user === undefined) {
-      console.log("USER IS UNDEFINED FIRST IF");
+    if (email.length > 5) {
+      const newUser = await User.create({
+        email: email,
+        password:
+          "$2a$10$TsO7T3jL7aBW1XmTbq7uuOsu.hDuD//Jq/1nqTxrP6iM5RG8oZH32",
+        name: "Új felhasználó",
+        company: "Vállalkozás neve",
+        enabled: 1,
+        roleId: 1,
+        deviceToken: "das",
+        username: "meghívott",
+      });
+
+      const meet = await Meets.create({
+        title,
+        description,
+        userId: req.user.id,
+        statusId: 3,
+        startTime,
+        endTime,
+        startDate: date,
+      });
+
+      await Partner.create({
+        statusId: 3,
+        userId: newUser.id,
+        meetId: meet.id,
+        startDate: date,
+      });
     }
+
     if (user != undefined) {
-      console.log("USER IS not ");
+      const meet = await Meets.create({
+        title,
+        description,
+        userId: req.user.id,
+        statusId: 3,
+        startTime,
+        endTime,
+        startDate: date,
+      });
+
+      await Partner.create({
+        statusId: 3,
+        userId: user,
+        meetId: meet.id,
+        startDate: date,
+      });
     }
-    // console.log("user length is", user.length);
-    // if (email.length === 0) {
-    //   const meet = await Meets.create({
-    //     title,
-    //     description,
-    //     userId: req.user.id,
-    //     statusId: 3,
-    //     startTime,
-    //     endTime,
-    //     startDate: date,
-    //   });
-
-    //   await Partner.create({
-    //     statusId: 3,
-    //     userId: user,
-    //     meetId: meet.id,
-    //     startDate: date,
-    //   });
-    // }
-
-    // if (user != 0) {
-    //   const meet = await Meets.create({
-    //     title,
-    //     description,
-    //     userId: req.user.id,
-    //     statusId: 3,
-    //     startTime,
-    //     endTime,
-    //     startDate: date,
-    //   });
-
-    //   await Partner.create({
-    //     statusId: 3,
-    //     userId: user,
-    //     meetId: meet.id,
-    //     startDate: date,
-    //   });
-    // }
 
     return res.json({
       status: 200,
